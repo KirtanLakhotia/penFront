@@ -559,7 +559,8 @@ main {
 }
 
 .upload-section,
-.recordings-section {
+.recordings-section,
+.global-qa {
   padding-top: 1.75rem;
 }
 
@@ -882,6 +883,116 @@ main {
   min-width: 0;
 }
 
+.qa-panel {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+  padding: 1rem;
+  min-width: 0;
+}
+
+.qa-panel__heading {
+  margin-bottom: 0.7rem;
+}
+
+.qa-panel__heading p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.qa-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+}
+
+.qa-form input {
+  min-width: 0;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+  padding: 0.8rem 1rem;
+  outline: none;
+}
+
+.qa-form input:focus {
+  border-color: rgba(17, 24, 39, 0.42);
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.qa-error {
+  margin: 0.8rem 0 0;
+  color: #991b1b;
+  line-height: 1.6;
+}
+
+.qa-exchange {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.qa-message {
+  border-radius: 14px;
+  padding: 0.85rem;
+  line-height: 1.7;
+}
+
+.qa-message span {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.qa-message p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.qa-answer-content {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.qa-answer-content p,
+.qa-answer-content ul {
+  margin: 0;
+}
+
+.qa-answer-content ul {
+  padding-left: 1.1rem;
+}
+
+.qa-answer-content li {
+  padding-left: 0.15rem;
+}
+
+.qa-answer-content code {
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.08);
+  padding: 0.08rem 0.25rem;
+  font-size: 0.92em;
+}
+
+.qa-message--user {
+  background: rgba(17, 24, 39, 0.06);
+  color: #111827;
+}
+
+.qa-message--answer {
+  background: #f8fafc;
+  color: #334155;
+}
+
 .detail-panel__heading {
   display: flex;
   align-items: baseline;
@@ -1135,6 +1246,14 @@ main {
 
   .detail-panel {
     padding: 0.9rem;
+  }
+
+  .qa-panel {
+    padding: 0.9rem;
+  }
+
+  .qa-form {
+    grid-template-columns: 1fr;
   }
 
   .detail-panel__heading {

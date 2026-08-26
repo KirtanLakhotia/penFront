@@ -1,6 +1,9 @@
 import { useState } from 'react'
 
-const NAV_ITEMS = [{ label: 'Upload', value: 'upload' }]
+const NAV_ITEMS = [
+  { label: 'Upload', value: 'upload' },
+  { label: 'Ask', value: 'ask' },
+]
 
 function Navbar({ activeView, onNavigate }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)

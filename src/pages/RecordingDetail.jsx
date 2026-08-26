@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDateTime, formatDuration, formatFileSize } from '../utils/formatters'
-import { getRecordingById, mapRecording } from '../services/recordingService'
+import { askRecordingQuestion, getRecordingById, mapRecording } from '../services/recordingService'
+import QuestionAnswerPanel from '../components/QuestionAnswerPanel'
 
 const PRIMARY_FIELDS = new Set([
   'recording_id',
@@ -177,6 +178,7 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   const transcript = recording.transcript || ''
   const todos = recording.todos || []
   const hasAudio = Boolean(recording.url)
+  const currentRecordingId = recording.recordingId || recording.id
 
   return (
     <section className="recording-detail section-wrap">
@@ -233,6 +235,14 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
             </div>
             <p className="detail-copy">{recording.summary || 'No summary is available for this recording.'}</p>
           </section>
+
+          <QuestionAnswerPanel
+            title="Ask About This Recording"
+            description="Ask something about the current recording."
+            placeholder="What was discussed about the project?"
+            onAsk={(question) => askRecordingQuestion(currentRecordingId, question)}
+            disabledReason={currentRecordingId ? '' : 'Recording ID is unavailable.'}
+          />
 
           <section className="detail-panel">
             <div className="detail-panel__heading">

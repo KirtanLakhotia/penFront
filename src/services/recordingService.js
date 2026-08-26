@@ -1,5 +1,6 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
 const DEFAULT_USER_ID = import.meta.env.VITE_USER_ID || 1
+const API_ROOT = API_BASE.replace(/\/$/, '')
 
 export function mapRecording(r) {
   const transcript = r.transcript || r.rawTranscript || r.transcript_text || r.text || null
@@ -27,7 +28,7 @@ export function mapRecording(r) {
 }
 
 async function fetchRecordings(userId = DEFAULT_USER_ID) {
-  const url = `${API_BASE.replace(/\/$/, '')}/recordings`
+  const url = `${API_ROOT}/recordings`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -68,6 +69,37 @@ export async function getRecordingById(recordingId, userId = DEFAULT_USER_ID) {
       String(raw.name) === targetId
     )
   }) || null
+}
+
+async function postQuestion(path, body) {
+  const res = await fetch(`${API_ROOT}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  const json = await res.json().catch(() => null)
+
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to get an answer')
+  }
+
+  return {
+    answer: json.answer || '',
+    documents: json.documents || [],
+  }
+}
+
+export function getCurrentUserId() {
+  return DEFAULT_USER_ID
+}
+
+export function askRecordingQuestion(recordingId, question) {
+  return postQuestion('/askRecordingLevel', { recordingId, question })
+}
+
+export function askUserQuestion(userId = DEFAULT_USER_ID, question) {
+  return postQuestion('/askUserLevel', { userId, question })
 }
 
 export function saveRecording(recording) {
