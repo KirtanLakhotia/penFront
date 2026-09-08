@@ -98,6 +98,27 @@ export function askRecordingQuestion(recordingId, question) {
   return postQuestion('/askRecordingLevel', { recordingId, question })
 }
 
+export async function getRecordingConversation(userId, recordingId) {
+  const res = await fetch(`${API_ROOT}/getConversationMessages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, recordingId }),
+  })
+
+  if (res.status === 404) return []
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load the conversation')
+  }
+
+  return Array.isArray(json.messages) ? [...json.messages].reverse() : []
+}
+
+export function askRecordingLevelChat(recordingId, userId, question) {
+  return postQuestion('/askRecordingLevelChat', { recordingId, userId, question })
+}
+
 export function askUserQuestion(userId = DEFAULT_USER_ID, question) {
   return postQuestion('/askUserLevel', { userId, question })
 }

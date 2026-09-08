@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDateTime, formatDuration, formatFileSize } from '../utils/formatters'
-import { askRecordingQuestion, getRecordingById, mapRecording } from '../services/recordingService'
+import {
+  askRecordingLevelChat,
+  getCurrentUserId,
+  getRecordingById,
+  getRecordingConversation,
+  mapRecording,
+} from '../services/recordingService'
 import QuestionAnswerPanel from '../components/QuestionAnswerPanel'
 
 const PRIMARY_FIELDS = new Set([
@@ -179,6 +185,7 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   const todos = recording.todos || []
   const hasAudio = Boolean(recording.url)
   const currentRecordingId = recording.recordingId || recording.id
+  const currentUserId = recording.userId || getCurrentUserId()
 
   return (
     <section className="recording-detail section-wrap">
@@ -238,9 +245,10 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
 
           <QuestionAnswerPanel
             title="Ask About This Recording"
-            description="Ask something about the current recording."
+            description="Ask follow-up questions and keep the conversation in context."
             placeholder="What was discussed about the project?"
-            onAsk={(question) => askRecordingQuestion(currentRecordingId, question)}
+            onAsk={(question) => askRecordingLevelChat(currentRecordingId, currentUserId, question)}
+            loadConversation={() => getRecordingConversation(currentUserId, currentRecordingId)}
             disabledReason={currentRecordingId ? '' : 'Recording ID is unavailable.'}
           />
 
