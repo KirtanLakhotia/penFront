@@ -119,8 +119,54 @@ export function askRecordingLevelChat(recordingId, userId, question) {
   return postQuestion('/askRecordingLevelChat', { recordingId, userId, question })
 }
 
-export function askUserQuestion(userId = DEFAULT_USER_ID, question) {
-  return postQuestion('/askUserLevel', { userId, question })
+export async function createUserConversation(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/createConversation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success || !json.conversation) {
+    throw new Error(json?.message || 'Unable to create a new conversation')
+  }
+
+  return json.conversation
+}
+
+export async function getUserConversations(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/getConversations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load conversations')
+  }
+
+  if (Array.isArray(json.conversation)) return json.conversation
+  return json.conversation ? [json.conversation] : []
+}
+
+export async function getUserConversationMessages(conversationId) {
+  const res = await fetch(`${API_ROOT}/getUserLevelConversationMessages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversationId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load conversation messages')
+  }
+
+  return Array.isArray(json.messages) ? [...json.messages].reverse() : []
+}
+
+export function askUserQuestion(userId = DEFAULT_USER_ID, question, conversationId) {
+  return postQuestion('/askUserLevelChat', { userId, question, conversationId })
 }
 
 export function saveRecording(recording) {
