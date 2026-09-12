@@ -696,6 +696,45 @@ main {
     transform 180ms ease;
 }
 
+.upload-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(230px, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.recorder-panel {
+  min-width: 0;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 24px;
+  background: linear-gradient(145deg, #111827 0%, #273449 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.recorder-panel__topline { display: flex; align-items: center; gap: 0.55rem; color: #cbd5e1; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.recorder-panel__icon { width: 1.6rem; height: 1.6rem; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fb7185; font-size: 0.65rem; }
+.recorder-live { color: #fda4af; }
+.recorder-panel h3 { margin: 1.4rem 0 0.45rem; font-size: 1.35rem; letter-spacing: -0.03em; }
+.recorder-panel__description { margin: 0; color: #cbd5e1; font-size: 0.88rem; line-height: 1.6; }
+.recorder-timer { margin: 1.5rem 0; color: #f8fafc; font-variant-numeric: tabular-nums; font-size: clamp(2.2rem, 4vw, 3.25rem); font-weight: 300; letter-spacing: -0.06em; }
+.recorder-timer--active { color: #fda4af; }
+.recorder-start { display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; width: 100%; margin-top: auto; border: 0; border-radius: 999px; padding: 0.8rem 1rem; background: #ffffff; color: #111827; font: inherit; font-weight: 700; cursor: pointer; }
+.recorder-start:disabled, .recorder-control:disabled { opacity: 0.55; cursor: not-allowed; }
+.recorder-start__dot { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #ef4444; }
+.recorder-controls { display: flex; gap: 0.55rem; margin-top: auto; }
+.recorder-control { flex: 1; min-width: 0; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 0.65rem 0.6rem; background: rgba(255, 255, 255, 0.08); color: #ffffff; font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.recorder-control--pause { background: rgba(255, 255, 255, 0.16); }
+.recorder-control--stop { border-color: rgba(253, 164, 175, 0.45); color: #fecdd3; }
+.recorder-control--upload { border-color: transparent; background: #ffffff; color: #111827; }
+.recorder-result { display: flex; flex-direction: column; flex: 1; }
+.recorder-audio { width: 100%; margin: 0 0 0.8rem; }
+.recorder-filename { margin: 0 0 1rem; overflow: hidden; color: #cbd5e1; font-size: 0.73rem; text-overflow: ellipsis; white-space: nowrap; }
+.recorder-panel__hint { margin: 1rem 0 0; color: #94a3b8; font-size: 0.7rem; line-height: 1.5; }
+
 .recording-card:hover,
 .recording-card:focus-visible {
   border-color: rgba(17, 24, 39, 0.2);
@@ -1359,6 +1398,8 @@ main {
     flex-direction: column;
     align-items: start;
   }
+
+  .upload-tools { grid-template-columns: 1fr; }
 
   .recording-detail__header {
     flex-direction: column;
