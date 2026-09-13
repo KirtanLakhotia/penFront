@@ -3,6 +3,7 @@ import { formatDateTime, formatDuration, formatFileSize } from '../utils/formatt
 import {
   askRecordingLevelChat,
   getCurrentUserId,
+  getDiarization,
   getRecordingById,
   getRecordingConversation,
   mapRecording,
@@ -106,6 +107,11 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
     recording: null,
     requestedId: null,
   })
+  const [diarizationState, setDiarizationState] = useState({
+    error: null,
+    loading: false,
+    segments: [],
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -145,6 +151,35 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   const recording = propRecording || (hasFetchedCurrentRecording ? fetchState.recording : null)
   const showLoading = !propRecording && !!recordingId && !hasFetchedCurrentRecording
   const showError = !propRecording && hasFetchedCurrentRecording && fetchState.error
+  const currentRecordingId = recording?.recordingId || recording?.id
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!currentRecordingId) {
+      setDiarizationState({ error: null, loading: false, segments: [] })
+      return undefined
+    }
+
+    setDiarizationState({ error: null, loading: true, segments: [] })
+    getDiarization(currentRecordingId)
+      .then((segments) => {
+        if (!isMounted) return
+        setDiarizationState({ error: null, loading: false, segments })
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        setDiarizationState({
+          error: err.message || 'Unable to load speaker transcription.',
+          loading: false,
+          segments: [],
+        })
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentRecordingId])
 
   const metadataEntries = useMemo(() => {
     const raw = recording?.raw || {}
@@ -184,7 +219,6 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   const transcript = recording.transcript || ''
   const todos = recording.todos || []
   const hasAudio = Boolean(recording.url)
-  const currentRecordingId = recording.recordingId || recording.id
   const currentUserId = recording.userId || getCurrentUserId()
 
   return (
@@ -221,6 +255,32 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
               </>
             ) : (
               <p className="detail-empty">Audio is unavailable for this recording.</p>
+            )}
+          </section>
+
+          <section className="detail-panel diarization-panel">
+            <div className="detail-panel__heading">
+              <div>
+                <h3>Speaker transcription</h3>
+                <p className="detail-panel__description">Conversation grouped by speaker</p>
+              </div>
+              <span>{diarizationState.segments.length} segments</span>
+            </div>
+            {diarizationState.loading ? (
+              <p className="detail-empty">Loading speaker transcription...</p>
+            ) : diarizationState.error ? (
+              <p className="detail-empty detail-empty--error">{diarizationState.error}</p>
+            ) : diarizationState.segments.length > 0 ? (
+              <div className="diarization-list">
+                {diarizationState.segments.map((segment, index) => (
+                  <article className="diarization-segment" key={segment.segment_id || `${segment.speaker_id}-${index}`}>
+                    <span className="diarization-speaker">{segment.speaker_id || 'Unknown speaker'}</span>
+                    <p>{segment.text || 'No text available.'}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="detail-empty">No speaker transcription is available for this recording.</p>
             )}
           </section>
 

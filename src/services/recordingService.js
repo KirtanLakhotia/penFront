@@ -119,6 +119,21 @@ export function askRecordingLevelChat(recordingId, userId, question) {
   return postQuestion('/askRecordingLevelChat', { recordingId, userId, question })
 }
 
+export async function getDiarization(recordingId) {
+  const res = await fetch(`${API_ROOT}/getDiarization`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recordingId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load speaker transcription')
+  }
+
+  return Array.isArray(json.diarization) ? json.diarization : []
+}
+
 export async function createUserConversation(userId = DEFAULT_USER_ID) {
   const res = await fetch(`${API_ROOT}/createConversation`, {
     method: 'POST',
