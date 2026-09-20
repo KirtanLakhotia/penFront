@@ -6,7 +6,9 @@ import {
   getDiarization,
   getRecordingById,
   getRecordingConversation,
+  getTodos,
   mapRecording,
+  setTodoDone,
 } from '../services/recordingService'
 import QuestionAnswerPanel from '../components/QuestionAnswerPanel'
 
@@ -112,6 +114,11 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
     loading: false,
     segments: [],
   })
+  const [todosState, setTodosState] = useState({
+    error: null,
+    loading: false,
+    items: [],
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -181,6 +188,34 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
     }
   }, [currentRecordingId])
 
+  useEffect(() => {
+    let isMounted = true
+
+    if (!currentRecordingId) {
+      setTodosState({ error: null, loading: false, items: [] })
+      return undefined
+    }
+
+    setTodosState({ error: null, loading: true, items: [] })
+    getTodos(currentRecordingId)
+      .then((items) => {
+        if (!isMounted) return
+        setTodosState({ error: null, loading: false, items })
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        setTodosState({
+          error: err.message || 'Unable to load action items.',
+          loading: false,
+          items: [],
+        })
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentRecordingId])
+
   const metadataEntries = useMemo(() => {
     const raw = recording?.raw || {}
 
@@ -217,9 +252,32 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   }
 
   const transcript = recording.transcript || ''
-  const todos = recording.todos || []
+  const todos = todosState.items
   const hasAudio = Boolean(recording.url)
   const currentUserId = recording.userId || getCurrentUserId()
+
+  const handleTodoChange = async (todo) => {
+    const nextIsDone = !todo.is_done
+    const previousItems = todosState.items
+
+    setTodosState((current) => ({
+      ...current,
+      error: null,
+      items: current.items.map((item) => (
+        item.todo_id === todo.todo_id ? { ...item, is_done: nextIsDone } : item
+      )),
+    }))
+
+    try {
+      await setTodoDone(todo.todo_id, nextIsDone)
+    } catch (err) {
+      setTodosState((current) => ({
+        ...current,
+        error: err.message || 'Unable to update action item.',
+        items: previousItems,
+      }))
+    }
+  }
 
   return (
     <section className="recording-detail section-wrap">
@@ -317,13 +375,21 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
               <h3>Action Items</h3>
               <span>{todos.length} total</span>
             </div>
-            {todos.length > 0 ? (
+            {todosState.loading ? (
+              <p className="detail-empty">Loading action items...</p>
+            ) : todosState.error && todos.length === 0 ? (
+              <p className="detail-empty detail-empty--error">{todosState.error}</p>
+            ) : todos.length > 0 ? (
               <ul className="recording-todos">
                 {todos.map((todo, index) => (
-                  <li key={`${todo.text || todo}-${index}`} className={todo.is_done ? 'done' : ''}>
+                  <li key={todo.todo_id || `${todo.text}-${index}`} className={todo.is_done ? 'done' : ''}>
                     <label>
-                      <input type="checkbox" checked={!!todo.is_done} readOnly />
-                      <span>{todo.text || (typeof todo === 'string' ? todo : formatValue(todo))}</span>
+                      <input
+                        type="checkbox"
+                        checked={!!todo.is_done}
+                        onChange={() => handleTodoChange(todo)}
+                      />
+                      <span>{todo.text || 'Untitled action item'}</span>
                     </label>
                   </li>
                 ))}

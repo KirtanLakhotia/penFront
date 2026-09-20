@@ -3,6 +3,7 @@ import { useState } from 'react'
 const NAV_ITEMS = [
   { label: 'Upload', value: 'upload' },
   { label: 'Ask', value: 'ask' },
+  { label: 'Todos', value: 'todos' },
 ]
 
 function Navbar({ activeView, onNavigate }) {

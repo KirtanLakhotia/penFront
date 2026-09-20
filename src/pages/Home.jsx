@@ -6,6 +6,7 @@ import UploadArea from '../components/UploadArea'
 import RecordingGrid from '../components/RecordingGrid'
 import RecordingDetail from './RecordingDetail'
 import Ask from './Ask'
+import Todos from './Todos'
 
 function Home() {
   const [activeView, setActiveView] = useState('home')
@@ -33,6 +34,9 @@ function Home() {
         ) : null}
         {activeView === 'ask' ? (
           <Ask />
+        ) : null}
+        {activeView === 'todos' ? (
+          <Todos />
         ) : null}
       </main>
 

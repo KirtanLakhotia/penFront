@@ -134,6 +134,34 @@ export async function getDiarization(recordingId) {
   return Array.isArray(json.diarization) ? json.diarization : []
 }
 
+export async function getTodos(recordingId) {
+  const res = await fetch(`${API_ROOT}/getTodos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recordingId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load action items')
+  }
+
+  return Array.isArray(json.todos) ? json.todos : []
+}
+
+export async function setTodoDone(todoId, isDone) {
+  const res = await fetch(`${API_ROOT}/setTodoDone`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ todo_id: todoId, is_done: isDone }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to update action item')
+  }
+}
+
 export async function createUserConversation(userId = DEFAULT_USER_ID) {
   const res = await fetch(`${API_ROOT}/createConversation`, {
     method: 'POST',
