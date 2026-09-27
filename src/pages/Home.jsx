@@ -7,6 +7,7 @@ import RecordingGrid from '../components/RecordingGrid'
 import RecordingDetail from './RecordingDetail'
 import Ask from './Ask'
 import Todos from './Todos'
+import Sync from './Sync'
 
 function Home() {
   const [activeView, setActiveView] = useState('home')
@@ -37,6 +38,9 @@ function Home() {
         ) : null}
         {activeView === 'todos' ? (
           <Todos />
+        ) : null}
+        {activeView === 'sync' ? (
+          <Sync/>
         ) : null}
       </main>
 

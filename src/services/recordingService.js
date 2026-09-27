@@ -53,6 +53,21 @@ export async function getRecordings(userId = DEFAULT_USER_ID) {
   }
 }
 
+export async function getRecordingNames(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/recordingNames`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch website recording names')
+
+  const json = await res.json()
+  if (!json?.success) throw new Error(json?.message || 'Invalid recording names response')
+
+  return (json.recordingNames || []).map((recording) => recording?.title).filter(Boolean)
+}
+
 export async function getRecordingById(recordingId, userId = DEFAULT_USER_ID) {
   const recordings = await fetchRecordings(userId)
   const targetId = String(recordingId)
@@ -134,7 +149,7 @@ export async function getDiarization(recordingId) {
   return Array.isArray(json.diarization) ? json.diarization : []
 }
 
-export async function getTodos(recordingId) {
+export async function getTodos(recordingId = null) {
   const res = await fetch(`${API_ROOT}/getTodos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
