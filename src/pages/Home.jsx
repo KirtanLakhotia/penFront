@@ -4,15 +4,15 @@ import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import UploadArea from '../components/UploadArea'
 import RecordingGrid from '../components/RecordingGrid'
-import QuestionAnswerPanel from '../components/QuestionAnswerPanel'
 import RecordingDetail from './RecordingDetail'
-import { askUserQuestion, getCurrentUserId } from '../services/recordingService'
+import Ask from './Ask'
+import Todos from './Todos'
+import Sync from './Sync'
 
 function Home() {
   const [activeView, setActiveView] = useState('home')
   const { recordings, uploadRecording, isUploading, uploadProgress } = useRecordings()
   const [selectedRecording, setSelectedRecording] = useState(null)
-  const currentUserId = getCurrentUserId()
 
   return (
     <div className="app-shell">
@@ -34,14 +34,13 @@ function Home() {
           )
         ) : null}
         {activeView === 'ask' ? (
-          <section className="global-qa section-wrap">
-            <QuestionAnswerPanel
-              title="Ask Across Your Recordings"
-              description="Ask something across your saved recordings."
-              placeholder="What decisions were made about the project?"
-              onAsk={(question) => askUserQuestion(currentUserId, question)}
-            />
-          </section>
+          <Ask />
+        ) : null}
+        {activeView === 'todos' ? (
+          <Todos />
+        ) : null}
+        {activeView === 'sync' ? (
+          <Sync/>
         ) : null}
       </main>
 

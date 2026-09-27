@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatDateTime, formatDuration, formatFileSize } from '../utils/formatters'
-import { askRecordingQuestion, getRecordingById, mapRecording } from '../services/recordingService'
+import {
+  askRecordingLevelChat,
+  getCurrentUserId,
+  getDiarization,
+  getRecordingById,
+  getRecordingConversation,
+  getTodos,
+  mapRecording,
+  setTodoDone,
+} from '../services/recordingService'
 import QuestionAnswerPanel from '../components/QuestionAnswerPanel'
 
 const PRIMARY_FIELDS = new Set([
@@ -100,6 +109,16 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
     recording: null,
     requestedId: null,
   })
+  const [diarizationState, setDiarizationState] = useState({
+    error: null,
+    loading: false,
+    segments: [],
+  })
+  const [todosState, setTodosState] = useState({
+    error: null,
+    loading: false,
+    items: [],
+  })
 
   useEffect(() => {
     let isMounted = true
@@ -139,6 +158,63 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   const recording = propRecording || (hasFetchedCurrentRecording ? fetchState.recording : null)
   const showLoading = !propRecording && !!recordingId && !hasFetchedCurrentRecording
   const showError = !propRecording && hasFetchedCurrentRecording && fetchState.error
+  const currentRecordingId = recording?.recordingId || recording?.id
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!currentRecordingId) {
+      setDiarizationState({ error: null, loading: false, segments: [] })
+      return undefined
+    }
+
+    setDiarizationState({ error: null, loading: true, segments: [] })
+    getDiarization(currentRecordingId)
+      .then((segments) => {
+        if (!isMounted) return
+        setDiarizationState({ error: null, loading: false, segments })
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        setDiarizationState({
+          error: err.message || 'Unable to load speaker transcription.',
+          loading: false,
+          segments: [],
+        })
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentRecordingId])
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!currentRecordingId) {
+      setTodosState({ error: null, loading: false, items: [] })
+      return undefined
+    }
+
+    setTodosState({ error: null, loading: true, items: [] })
+    getTodos(currentRecordingId)
+      .then((items) => {
+        if (!isMounted) return
+        setTodosState({ error: null, loading: false, items })
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        setTodosState({
+          error: err.message || 'Unable to load action items.',
+          loading: false,
+          items: [],
+        })
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentRecordingId])
 
   const metadataEntries = useMemo(() => {
     const raw = recording?.raw || {}
@@ -176,9 +252,32 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
   }
 
   const transcript = recording.transcript || ''
-  const todos = recording.todos || []
+  const todos = todosState.items
   const hasAudio = Boolean(recording.url)
-  const currentRecordingId = recording.recordingId || recording.id
+  const currentUserId = recording.userId || getCurrentUserId()
+
+  const handleTodoChange = async (todo) => {
+    const nextIsDone = !todo.is_done
+    const previousItems = todosState.items
+
+    setTodosState((current) => ({
+      ...current,
+      error: null,
+      items: current.items.map((item) => (
+        item.todo_id === todo.todo_id ? { ...item, is_done: nextIsDone } : item
+      )),
+    }))
+
+    try {
+      await setTodoDone(todo.todo_id, nextIsDone)
+    } catch (err) {
+      setTodosState((current) => ({
+        ...current,
+        error: err.message || 'Unable to update action item.',
+        items: previousItems,
+      }))
+    }
+  }
 
   return (
     <section className="recording-detail section-wrap">
@@ -217,6 +316,32 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
             )}
           </section>
 
+          <section className="detail-panel diarization-panel">
+            <div className="detail-panel__heading">
+              <div>
+                <h3>Speaker transcription</h3>
+                <p className="detail-panel__description">Conversation grouped by speaker</p>
+              </div>
+              <span>{diarizationState.segments.length} segments</span>
+            </div>
+            {diarizationState.loading ? (
+              <p className="detail-empty">Loading speaker transcription...</p>
+            ) : diarizationState.error ? (
+              <p className="detail-empty detail-empty--error">{diarizationState.error}</p>
+            ) : diarizationState.segments.length > 0 ? (
+              <div className="diarization-list">
+                {diarizationState.segments.map((segment, index) => (
+                  <article className="diarization-segment" key={segment.segment_id || `${segment.speaker_id}-${index}`}>
+                    <span className="diarization-speaker">{segment.speaker_id || 'Unknown speaker'}</span>
+                    <p>{segment.text || 'No text available.'}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="detail-empty">No speaker transcription is available for this recording.</p>
+            )}
+          </section>
+
           <section className="detail-panel">
             <div className="detail-panel__heading">
               <h3>Transcript</h3>
@@ -238,9 +363,10 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
 
           <QuestionAnswerPanel
             title="Ask About This Recording"
-            description="Ask something about the current recording."
+            description="Ask follow-up questions and keep the conversation in context."
             placeholder="What was discussed about the project?"
-            onAsk={(question) => askRecordingQuestion(currentRecordingId, question)}
+            onAsk={(question) => askRecordingLevelChat(currentRecordingId, currentUserId, question)}
+            loadConversation={() => getRecordingConversation(currentUserId, currentRecordingId)}
             disabledReason={currentRecordingId ? '' : 'Recording ID is unavailable.'}
           />
 
@@ -249,13 +375,21 @@ function RecordingDetail({ recordingId, recordingProp, onBack }) {
               <h3>Action Items</h3>
               <span>{todos.length} total</span>
             </div>
-            {todos.length > 0 ? (
+            {todosState.loading ? (
+              <p className="detail-empty">Loading action items...</p>
+            ) : todosState.error && todos.length === 0 ? (
+              <p className="detail-empty detail-empty--error">{todosState.error}</p>
+            ) : todos.length > 0 ? (
               <ul className="recording-todos">
                 {todos.map((todo, index) => (
-                  <li key={`${todo.text || todo}-${index}`} className={todo.is_done ? 'done' : ''}>
+                  <li key={todo.todo_id || `${todo.text}-${index}`} className={todo.is_done ? 'done' : ''}>
                     <label>
-                      <input type="checkbox" checked={!!todo.is_done} readOnly />
-                      <span>{todo.text || (typeof todo === 'string' ? todo : formatValue(todo))}</span>
+                      <input
+                        type="checkbox"
+                        checked={!!todo.is_done}
+                        onChange={() => handleTodoChange(todo)}
+                      />
+                      <span>{todo.text || 'Untitled action item'}</span>
                     </label>
                   </li>
                 ))}

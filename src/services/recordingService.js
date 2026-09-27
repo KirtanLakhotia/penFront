@@ -53,6 +53,21 @@ export async function getRecordings(userId = DEFAULT_USER_ID) {
   }
 }
 
+export async function getRecordingNames(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/recordingNames`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  if (!res.ok) throw new Error('Failed to fetch website recording names')
+
+  const json = await res.json()
+  if (!json?.success) throw new Error(json?.message || 'Invalid recording names response')
+
+  return (json.recordingNames || []).map((recording) => recording?.title).filter(Boolean)
+}
+
 export async function getRecordingById(recordingId, userId = DEFAULT_USER_ID) {
   const recordings = await fetchRecordings(userId)
   const targetId = String(recordingId)
@@ -98,8 +113,118 @@ export function askRecordingQuestion(recordingId, question) {
   return postQuestion('/askRecordingLevel', { recordingId, question })
 }
 
-export function askUserQuestion(userId = DEFAULT_USER_ID, question) {
-  return postQuestion('/askUserLevel', { userId, question })
+export async function getRecordingConversation(userId, recordingId) {
+  const res = await fetch(`${API_ROOT}/getConversationMessages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, recordingId }),
+  })
+
+  if (res.status === 404) return []
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load the conversation')
+  }
+
+  return Array.isArray(json.messages) ? [...json.messages].reverse() : []
+}
+
+export function askRecordingLevelChat(recordingId, userId, question) {
+  return postQuestion('/askRecordingLevelChat', { recordingId, userId, question })
+}
+
+export async function getDiarization(recordingId) {
+  const res = await fetch(`${API_ROOT}/getDiarization`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recordingId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load speaker transcription')
+  }
+
+  return Array.isArray(json.diarization) ? json.diarization : []
+}
+
+export async function getTodos(recordingId = null) {
+  const res = await fetch(`${API_ROOT}/getTodos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recordingId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load action items')
+  }
+
+  return Array.isArray(json.todos) ? json.todos : []
+}
+
+export async function setTodoDone(todoId, isDone) {
+  const res = await fetch(`${API_ROOT}/setTodoDone`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ todo_id: todoId, is_done: isDone }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to update action item')
+  }
+}
+
+export async function createUserConversation(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/createConversation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success || !json.conversation) {
+    throw new Error(json?.message || 'Unable to create a new conversation')
+  }
+
+  return json.conversation
+}
+
+export async function getUserConversations(userId = DEFAULT_USER_ID) {
+  const res = await fetch(`${API_ROOT}/getConversations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load conversations')
+  }
+
+  if (Array.isArray(json.conversation)) return json.conversation
+  return json.conversation ? [json.conversation] : []
+}
+
+export async function getUserConversationMessages(conversationId) {
+  const res = await fetch(`${API_ROOT}/getUserLevelConversationMessages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conversationId }),
+  })
+
+  const json = await res.json().catch(() => null)
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.message || 'Unable to load conversation messages')
+  }
+
+  return Array.isArray(json.messages) ? [...json.messages].reverse() : []
+}
+
+export function askUserQuestion(userId = DEFAULT_USER_ID, question, conversationId) {
+  return postQuestion('/askUserLevelChat', { userId, question, conversationId })
 }
 
 export function saveRecording(recording) {

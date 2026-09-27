@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import AudioRecorder from './AudioRecorder'
 
 const ACCEPTED_TYPES = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a', 'audio/aac', 'audio/ogg', 'video/mp4']
 const ACCEPT_ATTRIBUTE = '.mp3,.wav,.m4a,.aac,.ogg,.mp4,audio/*,video/mp4'
@@ -45,13 +46,14 @@ function UploadArea({ isUploading, uploadProgress, onUpload }) {
         <h2 id="upload-title">Drop a session into your workspace.</h2>
       </div>
 
-      <div
-        className={`upload-panel ${isDragging ? 'upload-panel--dragging' : ''}`}
-        onDragEnter={() => setIsDragging(true)}
-        onDragOver={(event) => event.preventDefault()}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-      >
+      <div className="upload-tools">
+        <div
+          className={`upload-panel ${isDragging ? 'upload-panel--dragging' : ''}`}
+          onDragEnter={() => setIsDragging(true)}
+          onDragOver={(event) => event.preventDefault()}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+        >
         <input
           ref={inputRef}
           className="sr-only"
@@ -79,9 +81,12 @@ function UploadArea({ isUploading, uploadProgress, onUpload }) {
 
         {error ? <p className="form-error" role="alert">{error}</p> : null}
 
-        <button className="primary-action" type="button" onClick={openFileDialog} disabled={isUploading}>
-          {isUploading ? `Uploading ${uploadProgress}%` : 'Upload recording'}
-        </button>
+          <button className="primary-action" type="button" onClick={openFileDialog} disabled={isUploading}>
+            {isUploading ? `Uploading ${uploadProgress}%` : 'Upload recording'}
+          </button>
+        </div>
+
+        <AudioRecorder isUploading={isUploading} onUpload={onUpload} />
       </div>
     </section>
   )
